@@ -44,7 +44,7 @@ def test_simple_key_string_value() -> None:
 
 
 def test_nested_objects() -> None:
-    s: str = '''
+    s: str = """
     {
         "outer": {
             "inner": {
@@ -55,7 +55,7 @@ def test_nested_objects() -> None:
         },
         "flag": false
     }
-    '''
+    """
     assert decode_with_my_impl(s) == json.loads(s)
 
 
@@ -153,7 +153,7 @@ def test_invalid_value_type() -> None:
 
 
 def test_complex_realistic_json() -> None:
-    s: str = '''
+    s: str = """
     {
       "users": [
         {
@@ -172,7 +172,7 @@ def test_complex_realistic_json() -> None:
       "count": 2,
       "next": null
     }
-    '''
+    """
     assert decode_with_my_impl(s) == json.loads(s)
 
 
@@ -182,12 +182,12 @@ def test_whitespace_variations_everywhere() -> None:
 
 
 def test_deep_nesting_and_large_array() -> None:
-    deep: str = '{"a": ' + ('[' * 20) + '1' + (']' * 20) + '}'
+    deep: str = '{"a": ' + ("[" * 20) + "1" + ("]" * 20) + "}"
     assert decode_with_my_impl(deep) == json.loads(deep)
 
     large_list: list[int] = list(range(100))
     builtin_obj: dict[str, Any] = {"nums": large_list}
-    s2: str = '{"nums": [' + ",".join(str(n) for n in large_list) + ']}'
+    s2: str = '{"nums": [' + ",".join(str(n) for n in large_list) + "]}"
     assert decode_with_my_impl(s2) == builtin_obj
 
 
@@ -198,17 +198,19 @@ def test_invalid_json_extra_characters_midway() -> None:
 
 def test_non_string_key() -> None:
     with pytest.raises(JSONDecodeError):
-        decode_with_my_impl('{unquoted: 1}')
+        decode_with_my_impl("{unquoted: 1}")
 
 
 def test_null_top_level_object() -> None:
     # null is valid JSON at top level
     assert decode_with_my_impl("null") == json.loads("null")
 
+
 def test_boolean_top_level_allowed() -> None:
     # Booleans are valid JSON at top level
     assert decode_with_my_impl("true") == json.loads("true")
     assert decode_with_my_impl("false") == json.loads("false")
+
 
 def test_number_top_level_allowed() -> None:
     # Numbers are valid JSON at top level
@@ -216,17 +218,20 @@ def test_number_top_level_allowed() -> None:
     assert decode_with_my_impl("-456") == json.loads("-456")
     assert decode_with_my_impl("0.789") == json.loads("0.789")
 
+
 def test_string_top_level_allowed() -> None:
     # Strings are valid JSON at top level
     assert decode_with_my_impl('"hello"') == json.loads('"hello"')
     assert decode_with_my_impl('""') == json.loads('""')
-    assert decode_with_my_impl("\"just a string\"") == json.loads("\"just a string\"")
+    assert decode_with_my_impl('"just a string"') == json.loads('"just a string"')
+
 
 def test_array_top_level_allowed() -> None:
     # Arrays are valid JSON at top level
     assert decode_with_my_impl("[]") == json.loads("[]")
     assert decode_with_my_impl("[1, 2, 3]") == json.loads("[1, 2, 3]")
     assert decode_with_my_impl('["a", "b"]') == json.loads('["a", "b"]')
+
 
 def test_unicode_out_of_range_in_escape() -> None:
     with pytest.raises(JSONDecodeError):
@@ -250,7 +255,7 @@ def test_number_with_multiple_dots() -> None:
 
 def test_deeply_invalid_syntax() -> None:
     with pytest.raises(JSONDecodeError):
-        decode_with_my_impl('@#$%^&*')
+        decode_with_my_impl("@#$%^&*")
 
 
 def test_array_with_leading_zero_number() -> None:
@@ -261,6 +266,7 @@ def test_array_with_leading_zero_number() -> None:
 def test_string_containing_escaped_slash_and_backspace() -> None:
     s: str = r'{"path": "C:\\\\folder\\file.txt", "ctrl": "\b\f"}'
     assert decode_with_my_impl(s) == json.loads(s)
+
 
 def test_empty_string_key_and_value() -> None:
     # Empty string as a key is valid; its value can also be an empty string
@@ -331,19 +337,13 @@ def test_array_with_mixed_whitespace_and_types() -> None:
 def test_nested_empty_objects_and_arrays_deep() -> None:
     # 5 levels of nested objects, each containing a key "b" whose value is
     # 5 levels of nested empty arrays. Total depth: {"a": {"b": {"b": {"b": {"b": [[[[[]]]]]}}}}}
-    deep = (
-        '{"a": '
-          + '{"b": ' * 5
-          + '[' * 5
-          + ']' * 5
-          + '}' * 5
-        + '}'
-    )
-    
+    deep = '{"a": ' + '{"b": ' * 5 + "[" * 5 + "]" * 5 + "}" * 5 + "}"
+
     # Just verify that your decoder matches json.loads - that's the real test!
     expected = json.loads(deep)
     result = decode_with_my_impl(deep)
     assert result == expected
+
 
 def test_object_with_many_keys_and_varied_types() -> None:
     # Create an object with 50 keys programmatically
@@ -371,7 +371,6 @@ def test_object_with_many_keys_and_varied_types() -> None:
     assert my_impl == builtin
 
 
-
 def test_invalid_literals_and_wrong_keyword() -> None:
     # 'Truth' is not a valid literal
     with pytest.raises(JSONDecodeError):
@@ -389,7 +388,7 @@ def test_invalid_literals_and_wrong_keyword() -> None:
 def test_object_missing_quotes_around_key() -> None:
     # Key must be in double quotes
     with pytest.raises(JSONDecodeError):
-        decode_with_my_impl('{foo: 1}')
+        decode_with_my_impl("{foo: 1}")
 
     # Single quotes not allowed
     with pytest.raises(JSONDecodeError):
@@ -412,7 +411,7 @@ def test_array_errors_extra_commas_and_missing_commas() -> None:
 
 def test_unescaped_control_in_string_is_error() -> None:
     # A literal newline in a JSON string is invalid
-    s = "{\n\"a\": \"line1\nline2\"}"
+    s = '{\n"a": "line1\nline2"}'
     with pytest.raises(JSONDecodeError):
         decode_with_my_impl(s)
 
@@ -420,7 +419,7 @@ def test_unescaped_control_in_string_is_error() -> None:
 def test_multiple_branches_of_malformed_input() -> None:
     # Completely invalid JSON
     with pytest.raises(JSONDecodeError):
-        decode_with_my_impl('@#$%^&*')
+        decode_with_my_impl("@#$%^&*")
 
     # Missing colon
     with pytest.raises(JSONDecodeError):
@@ -441,7 +440,7 @@ def test_multiple_branches_of_malformed_input() -> None:
 
 def test_large_integer_values() -> None:
     # JSON allows arbitrarily large integers; my_impl uses Python int, so it should work
-    large = 10 ** 30
+    large = 10**30
     s = f'{{"big": {large}}}'
     my_impl = decode_with_my_impl(s)
     builtin = json.loads(s)
@@ -449,7 +448,7 @@ def test_large_integer_values() -> None:
 
 
 def test_mixed_deep_structure_combined() -> None:
-    s = '''
+    s = """
     {
       "users": [
         {"id": 1, "name": "A", "prefs": {"langs": ["py","js"], "active": true}},
@@ -458,212 +457,213 @@ def test_mixed_deep_structure_combined() -> None:
       "meta": {"count": 2, "description": null},
       "values": [1, 2.5, {"nestedArr": [[], [3]]}, []]
     }
-    '''
+    """
     my_impl = decode_with_my_impl(s)
     builtin = json.loads(s)
     assert my_impl == builtin
 
+
 def test_extreme_nesting_depth() -> None:
-   # Test very deep nesting (100 levels)
-   deep_array = '{"data": ' + '[' * 100 + '42' + ']' * 100 + '}'
-   assert decode_with_my_impl(deep_array) == json.loads(deep_array)
-   
-   deep_object = '{"level": ' + '{"next": ' * 50 + 'null' + '}' * 50 + '}'
-   assert decode_with_my_impl(deep_object) == json.loads(deep_object)
+    # Test very deep nesting (100 levels)
+    deep_array = '{"data": ' + "[" * 100 + "42" + "]" * 100 + "}"
+    assert decode_with_my_impl(deep_array) == json.loads(deep_array)
+
+    deep_object = '{"level": ' + '{"next": ' * 50 + "null" + "}" * 50 + "}"
+    assert decode_with_my_impl(deep_object) == json.loads(deep_object)
 
 
 def test_edge_case_numbers() -> None:
-   # Test various number formats
-   s = '{"zero": 0, "negative_zero": -0, "large": 999999999999999999, "small": -999999999999999999}'
-   assert decode_with_my_impl(s) == json.loads(s)
-   
-   # Test decimal numbers
-   s2 = '{"decimals": [0.0, -0.0, 123.456, -123.456, 0.000001]}'
-   assert decode_with_my_impl(s2) == json.loads(s2)
-   
-   # Invalid number formats
-   with pytest.raises(JSONDecodeError):
-       decode_with_my_impl('{"bad": +123}')  # Leading + not allowed
-   
-   with pytest.raises(JSONDecodeError):
-       decode_with_my_impl('{"bad": 00123}')  # Multiple leading zeros
+    # Test various number formats
+    s = '{"zero": 0, "negative_zero": -0, "large": 999999999999999999, "small": -999999999999999999}'
+    assert decode_with_my_impl(s) == json.loads(s)
+
+    # Test decimal numbers
+    s2 = '{"decimals": [0.0, -0.0, 123.456, -123.456, 0.000001]}'
+    assert decode_with_my_impl(s2) == json.loads(s2)
+
+    # Invalid number formats
+    with pytest.raises(JSONDecodeError):
+        decode_with_my_impl('{"bad": +123}')  # Leading + not allowed
+
+    with pytest.raises(JSONDecodeError):
+        decode_with_my_impl('{"bad": 00123}')  # Multiple leading zeros
 
 
 def test_complex_string_escapes() -> None:
-   # Test all escape sequences together
-   s = r'{"complex": "\"\\\b\f\n\r\t\/\u0048\u0065\u006c\u006c\u006f"}'
-   assert decode_with_my_impl(s) == json.loads(s)
-   
-   # Test unicode with various ranges
-   s2 = '{"unicode": "\\u0000\\u001F\\u0020\\u007F\\u0080\\u00FF\\uFFFF"}'
-   assert decode_with_my_impl(s2) == json.loads(s2)
-   
-   # Invalid unicode escapes
-   with pytest.raises(JSONDecodeError):
-       decode_with_my_impl('{"bad": "\\uGGGG"}')
-   
-   with pytest.raises(JSONDecodeError):
-       decode_with_my_impl('{"bad": "\\u123"}')  # Only 3 hex digits
+    # Test all escape sequences together
+    s = r'{"complex": "\"\\\b\f\n\r\t\/\u0048\u0065\u006c\u006c\u006f"}'
+    assert decode_with_my_impl(s) == json.loads(s)
+
+    # Test unicode with various ranges
+    s2 = '{"unicode": "\\u0000\\u001F\\u0020\\u007F\\u0080\\u00FF\\uFFFF"}'
+    assert decode_with_my_impl(s2) == json.loads(s2)
+
+    # Invalid unicode escapes
+    with pytest.raises(JSONDecodeError):
+        decode_with_my_impl('{"bad": "\\uGGGG"}')
+
+    with pytest.raises(JSONDecodeError):
+        decode_with_my_impl('{"bad": "\\u123"}')  # Only 3 hex digits
 
 
 def test_whitespace_edge_cases() -> None:
-   # Test all types of whitespace
-   whitespaces = [' ', '\t', '\n', '\r']
-   for ws in whitespaces:
-       s = f'{{{ws}"key"{ws}:{ws}"value"{ws}}}'
-       assert decode_with_my_impl(s) == json.loads(s)
-   
-   # Mixed whitespace
-   s = '{\n\t  "mixed"  \r\n:\t\t[\n   1,\r2   ,\t\n3\r\n]\n}'
-   assert decode_with_my_impl(s) == json.loads(s)
+    # Test all types of whitespace
+    whitespaces = [" ", "\t", "\n", "\r"]
+    for ws in whitespaces:
+        s = f'{{{ws}"key"{ws}:{ws}"value"{ws}}}'
+        assert decode_with_my_impl(s) == json.loads(s)
+
+    # Mixed whitespace
+    s = '{\n\t  "mixed"  \r\n:\t\t[\n   1,\r2   ,\t\n3\r\n]\n}'
+    assert decode_with_my_impl(s) == json.loads(s)
 
 
 def test_empty_containers_variations() -> None:
-   # Various empty container patterns
-   test_cases = [
-       '{}',
-       '{"empty_obj": {}}',
-       '{"empty_arr": []}',
-       '{"nested_empty": {"inner": {}}}',
-       '{"mixed": [[], {}, [], {}]}',
-       '{"deep_empty": [[[[{}]]]]}',
-   ]
-   
-   for case in test_cases:
-       assert decode_with_my_impl(case) == json.loads(case)
+    # Various empty container patterns
+    test_cases = [
+        "{}",
+        '{"empty_obj": {}}',
+        '{"empty_arr": []}',
+        '{"nested_empty": {"inner": {}}}',
+        '{"mixed": [[], {}, [], {}]}',
+        '{"deep_empty": [[[[{}]]]]}',
+    ]
+
+    for case in test_cases:
+        assert decode_with_my_impl(case) == json.loads(case)
 
 
 def test_string_boundary_cases() -> None:
-   # Empty strings
-   s = '{"empty": "", "also_empty": ""}'
-   assert decode_with_my_impl(s) == json.loads(s)
-   
-   # Very long string
-   long_str = "a" * 10000
-   s2 = f'{{"long": "{long_str}"}}'
-   assert decode_with_my_impl(s2) == json.loads(s2)
-   
-   # String with only escaped characters
-   s3 = r'{"escaped": "\"\\\b\f\n\r\t"}'
-   assert decode_with_my_impl(s3) == json.loads(s3)
+    # Empty strings
+    s = '{"empty": "", "also_empty": ""}'
+    assert decode_with_my_impl(s) == json.loads(s)
+
+    # Very long string
+    long_str = "a" * 10000
+    s2 = f'{{"long": "{long_str}"}}'
+    assert decode_with_my_impl(s2) == json.loads(s2)
+
+    # String with only escaped characters
+    s3 = r'{"escaped": "\"\\\b\f\n\r\t"}'
+    assert decode_with_my_impl(s3) == json.loads(s3)
 
 
 def test_array_edge_cases() -> None:
-   # Single element arrays
-   test_cases = [
-       '{"arr": [1]}',
-       '{"arr": ["single"]}',
-       '{"arr": [true]}',
-       '{"arr": [null]}',
-       '{"arr": [{}]}',
-       '{"arr": [[]]}',
-   ]
-   
-   for case in test_cases:
-       assert decode_with_my_impl(case) == json.loads(case)
-   
-   # Large arrays
-   large_array = '[' + ','.join(str(i) for i in range(1000)) + ']'
-   s = f'{{"numbers": {large_array}}}'
-   assert decode_with_my_impl(s) == json.loads(s)
+    # Single element arrays
+    test_cases = [
+        '{"arr": [1]}',
+        '{"arr": ["single"]}',
+        '{"arr": [true]}',
+        '{"arr": [null]}',
+        '{"arr": [{}]}',
+        '{"arr": [[]]}',
+    ]
+
+    for case in test_cases:
+        assert decode_with_my_impl(case) == json.loads(case)
+
+    # Large arrays
+    large_array = "[" + ",".join(str(i) for i in range(1000)) + "]"
+    s = f'{{"numbers": {large_array}}}'
+    assert decode_with_my_impl(s) == json.loads(s)
 
 
 def test_object_key_variations() -> None:
-   # Various valid key formats
-   test_cases = [
-       '{"": "empty_key"}',  # Empty string key
-       '{"a": 1, "b": 2, "c": 3}',  # Multiple keys
-       '{"key with spaces": "value"}',
-       '{"key\\nwith\\tescapes": "value"}',
-       '{"\\u0048\\u0065\\u006c\\u006c\\u006f": "unicode_key"}',
-   ]
-   
-   for case in test_cases:
-       assert decode_with_my_impl(case) == json.loads(case)
+    # Various valid key formats
+    test_cases = [
+        '{"": "empty_key"}',  # Empty string key
+        '{"a": 1, "b": 2, "c": 3}',  # Multiple keys
+        '{"key with spaces": "value"}',
+        '{"key\\nwith\\tescapes": "value"}',
+        '{"\\u0048\\u0065\\u006c\\u006c\\u006f": "unicode_key"}',
+    ]
+
+    for case in test_cases:
+        assert decode_with_my_impl(case) == json.loads(case)
 
 
 def test_mixed_type_arrays() -> None:
-   # Arrays with all possible value types
-   s = '{"mixed": [null, true, false, 0, -1, 1.5, "", "string", [], {}, {"nested": [1,2,3]}]}'
-   assert decode_with_my_impl(s) == json.loads(s)
-   
-   # Nested mixed arrays
-   s2 = '{"nested_mixed": [[null, true], [false, 0], [-1, 1.5], ["", "string"], [[], {}]]}'
-   assert decode_with_my_impl(s2) == json.loads(s2)
+    # Arrays with all possible value types
+    s = '{"mixed": [null, true, false, 0, -1, 1.5, "", "string", [], {}, {"nested": [1,2,3]}]}'
+    assert decode_with_my_impl(s) == json.loads(s)
+
+    # Nested mixed arrays
+    s2 = '{"nested_mixed": [[null, true], [false, 0], [-1, 1.5], ["", "string"], [[], {}]]}'
+    assert decode_with_my_impl(s2) == json.loads(s2)
 
 
 def test_error_recovery_boundaries() -> None:
-   # Test errors at different parsing stages
-   error_cases = [
-       '',  # Empty input
-       '{',  # Unclosed object
-       '{"key"',  # Missing colon and value
-       '{"key":',  # Missing value
-       '{"key": "value"',  # Missing closing brace
-       '{"key": "value",',  # Trailing comma
-       '{"key": "value", "key2"',  # Second key missing colon
-       '[',  # Unclosed array
-       '[1',  # Missing closing bracket
-       '[1,',  # Trailing comma in array
-       '[1,,2]',  # Double comma
-       '{"key": [}',  # Mismatched brackets
-       '{"key": ]}',  # Wrong closing bracket
-   ]
-   
-   for case in error_cases:
-       with pytest.raises(JSONDecodeError):
-           decode_with_my_impl(case)
+    # Test errors at different parsing stages
+    error_cases = [
+        "",  # Empty input
+        "{",  # Unclosed object
+        '{"key"',  # Missing colon and value
+        '{"key":',  # Missing value
+        '{"key": "value"',  # Missing closing brace
+        '{"key": "value",',  # Trailing comma
+        '{"key": "value", "key2"',  # Second key missing colon
+        "[",  # Unclosed array
+        "[1",  # Missing closing bracket
+        "[1,",  # Trailing comma in array
+        "[1,,2]",  # Double comma
+        '{"key": [}',  # Mismatched brackets
+        '{"key": ]}',  # Wrong closing bracket
+    ]
+
+    for case in error_cases:
+        with pytest.raises(JSONDecodeError):
+            decode_with_my_impl(case)
 
 
 def test_literal_parsing_edge_cases() -> None:
-   # Test literal parsing with various contexts
-   s = '{"literals": [true, false, null, true, false, null]}'
-   assert decode_with_my_impl(s) == json.loads(s)
-   
-   # Literals as object values
-   s2 = '{"t": true, "f": false, "n": null, "t2": true, "f2": false, "n2": null}'
-   assert decode_with_my_impl(s2) == json.loads(s2)
-   
-   # Invalid literal variations
-   invalid_literals = [
-       '{"bad": True}',  # Wrong capitalization
-       '{"bad": FALSE}',  # Wrong capitalization
-       '{"bad": NULL}',  # Wrong capitalization
-       '{"bad": tru}',  # Incomplete
-       '{"bad": fals}',  # Incomplete
-       '{"bad": nul}',  # Incomplete
-       '{"bad": truex}',  # Extra characters
-       '{"bad": falsex}',  # Extra characters
-       '{"bad": nullx}',  # Extra characters
-   ]
-   
-   for case in invalid_literals:
-       with pytest.raises(JSONDecodeError):
-           decode_with_my_impl(case)
+    # Test literal parsing with various contexts
+    s = '{"literals": [true, false, null, true, false, null]}'
+    assert decode_with_my_impl(s) == json.loads(s)
+
+    # Literals as object values
+    s2 = '{"t": true, "f": false, "n": null, "t2": true, "f2": false, "n2": null}'
+    assert decode_with_my_impl(s2) == json.loads(s2)
+
+    # Invalid literal variations
+    invalid_literals = [
+        '{"bad": True}',  # Wrong capitalization
+        '{"bad": FALSE}',  # Wrong capitalization
+        '{"bad": NULL}',  # Wrong capitalization
+        '{"bad": tru}',  # Incomplete
+        '{"bad": fals}',  # Incomplete
+        '{"bad": nul}',  # Incomplete
+        '{"bad": truex}',  # Extra characters
+        '{"bad": falsex}',  # Extra characters
+        '{"bad": nullx}',  # Extra characters
+    ]
+
+    for case in invalid_literals:
+        with pytest.raises(JSONDecodeError):
+            decode_with_my_impl(case)
 
 
 def test_number_precision_and_range() -> None:
-   # Test floating point precision
-   s = '{"precise": [0.1, 0.2, 0.3, 0.123456789, 123.456789]}'
-   assert decode_with_my_impl(s) == json.loads(s)
-   
-   # Very small and large numbers
-   s2 = '{"range": [0.000000001, 999999999.999999999, -999999999.999999999]}'
-   assert decode_with_my_impl(s2) == json.loads(s2)
+    # Test floating point precision
+    s = '{"precise": [0.1, 0.2, 0.3, 0.123456789, 123.456789]}'
+    assert decode_with_my_impl(s) == json.loads(s)
+
+    # Very small and large numbers
+    s2 = '{"range": [0.000000001, 999999999.999999999, -999999999.999999999]}'
+    assert decode_with_my_impl(s2) == json.loads(s2)
 
 
 def test_structure_variations() -> None:
-   # Object in array in object pattern
-   s = '{"data": [{"users": [{"id": 1, "tags": ["a", "b"]}]}]}'
-   assert decode_with_my_impl(s) == json.loads(s)
-   
-   # Array in object in array pattern
-   s2 = '[{"items": [1, 2, {"nested": [3, 4]}]}, {"items": []}]'
-   assert decode_with_my_impl(s2) == json.loads(s2)
-   
-   # Alternating structures
-   s3 = '{"a": [{"b": [{"c": {"d": [1]}}]}]}'
-   assert decode_with_my_impl(s3) == json.loads(s3)
+    # Object in array in object pattern
+    s = '{"data": [{"users": [{"id": 1, "tags": ["a", "b"]}]}]}'
+    assert decode_with_my_impl(s) == json.loads(s)
+
+    # Array in object in array pattern
+    s2 = '[{"items": [1, 2, {"nested": [3, 4]}]}, {"items": []}]'
+    assert decode_with_my_impl(s2) == json.loads(s2)
+
+    # Alternating structures
+    s3 = '{"a": [{"b": [{"c": {"d": [1]}}]}]}'
+    assert decode_with_my_impl(s3) == json.loads(s3)
 
 
 def test_stress_test_large_structure() -> None:
@@ -671,7 +671,7 @@ def test_stress_test_large_structure() -> None:
     def generate_nested_structure(depth: int, width: int) -> str:
         if depth == 0:
             return str(depth)
-        
+
         items: list[str] = []  # Explicitly type the list
         for i in range(width):
             if i % 3 == 0:
@@ -680,28 +680,31 @@ def test_stress_test_large_structure() -> None:
                 items.append(f'"key{i}": [{generate_nested_structure(depth-1, width)}]')
             else:
                 items.append(f'"key{i}": "value{i}"')
-        
-        return '{' + ', '.join(items) + '}'
-    
+
+        return "{" + ", ".join(items) + "}"
+
     # Generate moderately complex structure
     complex_json = generate_nested_structure(4, 3)
     assert decode_with_my_impl(complex_json) == json.loads(complex_json)
 
 
 def test_pathological_cases() -> None:
-   # Deeply nested alternating structures
-   alternating = '{"a": [{"b": [{"c": [{"d": {}}]}]}]}'
-   assert decode_with_my_impl(alternating) == json.loads(alternating)
-   
-   # Many keys in single object
-   many_keys = '{' + ', '.join(f'"key{i}": {i}' for i in range(100)) + '}'
-   assert decode_with_my_impl(many_keys) == json.loads(many_keys)
-   
-   # Long array of varied types
-   long_mixed = '{"data": [' + ', '.join([
-       'null', 'true', 'false', '42', '"string"', '[]', '{}'
-   ] * 50) + ']}'
-   assert decode_with_my_impl(long_mixed) == json.loads(long_mixed)
+    # Deeply nested alternating structures
+    alternating = '{"a": [{"b": [{"c": [{"d": {}}]}]}]}'
+    assert decode_with_my_impl(alternating) == json.loads(alternating)
+
+    # Many keys in single object
+    many_keys = "{" + ", ".join(f'"key{i}": {i}' for i in range(100)) + "}"
+    assert decode_with_my_impl(many_keys) == json.loads(many_keys)
+
+    # Long array of varied types
+    long_mixed = (
+        '{"data": ['
+        + ", ".join(["null", "true", "false", "42", '"string"', "[]", "{}"] * 50)
+        + "]}"
+    )
+    assert decode_with_my_impl(long_mixed) == json.loads(long_mixed)
+
 
 def test_duplicate_keys_overwrite_behavior() -> None:
     # JSON with duplicate keys should keep the last value
@@ -730,12 +733,12 @@ def test_nonbreaking_space_instead_of_whitespace() -> None:
     # U+00A0 (non-breaking space) is not recognized as whitespace by the parser
     # json.loads also errors on this
     with pytest.raises(JSONDecodeError):
-        decode_with_my_impl('{\u00A0"a": 1}')
+        decode_with_my_impl('{\u00a0"a": 1}')
 
 
 def test_literal_tab_in_string_is_error() -> None:
     # A literal tab character inside a JSON string must be escaped (\t). Unescaped is invalid.
-    s = "{ \"a\": \"line1\tline2\" }"
+    s = '{ "a": "line1\tline2" }'
     with pytest.raises(JSONDecodeError):
         decode_with_my_impl(s)
 
@@ -743,7 +746,7 @@ def test_literal_tab_in_string_is_error() -> None:
 def test_unescaped_backspace_literal_in_string_is_error() -> None:
     # A literal backspace (0x08) in a string is disallowed
     # Represented here with Python's \b in a raw literal
-    s = "{ \"a\": \"bad\bchar\" }"
+    s = '{ "a": "bad\bchar" }'
     with pytest.raises(JSONDecodeError):
         decode_with_my_impl(s)
 
@@ -768,36 +771,36 @@ def test_short_unicode_escape_length() -> None:
 def test_object_with_unquoted_true_false_null_as_keys() -> None:
     # Keys must be double-quoted strings; using literals as keys is invalid
     with pytest.raises(JSONDecodeError):
-        decode_with_my_impl('{true: 1}')
+        decode_with_my_impl("{true: 1}")
 
     with pytest.raises(JSONDecodeError):
-        decode_with_my_impl('{false: 2}')
+        decode_with_my_impl("{false: 2}")
 
     with pytest.raises(JSONDecodeError):
-        decode_with_my_impl('{null: 3}')
+        decode_with_my_impl("{null: 3}")
 
 
 def test_array_with_malformed_values_and_extra_brackets() -> None:
     # Missing comma between elements
     with pytest.raises(JSONDecodeError):
-        decode_with_my_impl('[1 2 3]')
+        decode_with_my_impl("[1 2 3]")
 
     # Extra closing bracket at the end
     with pytest.raises(JSONDecodeError):
-        decode_with_my_impl('[1,2,3]]')
+        decode_with_my_impl("[1,2,3]]")
 
     # Missing value (nothing between commas)
     with pytest.raises(JSONDecodeError):
-        decode_with_my_impl('[1,,3]')
+        decode_with_my_impl("[1,,3]")
 
     # Values out of order: expecting value but got a brace
     with pytest.raises(JSONDecodeError):
-        decode_with_my_impl('[{]')
+        decode_with_my_impl("[{]")
 
 
 def test_top_level_array_missing_comma() -> None:
     with pytest.raises(JSONDecodeError):
-        decode_with_my_impl('[1 2, 3]')
+        decode_with_my_impl("[1 2, 3]")
 
 
 def test_number_with_leading_zeros_and_decimal() -> None:
@@ -815,14 +818,14 @@ def test_number_with_leading_zeros_and_decimal() -> None:
 
 def test_boolean_literal_as_top_level_with_whitespace() -> None:
     # Leading/trailing whitespace around a top-level boolean
-    assert decode_with_my_impl('   true   ') is True
-    assert decode_with_my_impl('\nfalse\r\n') is False
+    assert decode_with_my_impl("   true   ") is True
+    assert decode_with_my_impl("\nfalse\r\n") is False
 
 
 def test_null_literal_as_top_level_with_extra_brackets_error() -> None:
     # "null" is valid alone, but "null[]" is invalid
     with pytest.raises(JSONDecodeError):
-        decode_with_my_impl('null[]')
+        decode_with_my_impl("null[]")
 
 
 def test_complex_mixed_key_names_with_escapes() -> None:
@@ -838,7 +841,7 @@ def test_complex_mixed_key_names_with_escapes() -> None:
 
 def test_array_of_only_commas_is_invalid() -> None:
     with pytest.raises(JSONDecodeError):
-        decode_with_my_impl('[,,,]')
+        decode_with_my_impl("[,,,]")
 
 
 def test_string_with_escape_at_end_of_input() -> None:
@@ -846,19 +849,20 @@ def test_string_with_escape_at_end_of_input() -> None:
     with pytest.raises(JSONDecodeError):
         decode_with_my_impl(r'{"a": "incomplete_escape\"}')
 
+
 def test_string_ending_with_backslash_followed_by_more_content() -> None:
     # String ends with incomplete escape, but there's more JSON after the closing quote
     with pytest.raises(JSONDecodeError):
         decode_with_my_impl(r'{"a": "incomplete\", "b": "valid"}')
-    
+
     # String ends with incomplete escape, followed by another key-value pair
     with pytest.raises(JSONDecodeError):
         decode_with_my_impl(r'{"first": "ends_with\", "second": 42}')
-    
+
     # String ends with incomplete escape, followed by array
     with pytest.raises(JSONDecodeError):
         decode_with_my_impl(r'{"text": "trailing\", "numbers": [1, 2, 3]}')
-    
+
     # String ends with incomplete escape in an array
     with pytest.raises(JSONDecodeError):
         decode_with_my_impl(r'["valid", "incomplete\", "another"]')
@@ -875,7 +879,9 @@ def test_object_with_misplaced_brace_and_bracket() -> None:
         decode_with_my_impl('{"a": [1, 2]} }')
 
     with pytest.raises(JSONDecodeError):
-        decode_with_my_impl('{"a": {1, 2}}')  # braces used instead of bracket inside object
+        decode_with_my_impl(
+            '{"a": {1, 2}}'
+        )  # braces used instead of bracket inside object
 
 
 def test_valid_top_level_string_with_escaped_characters() -> None:
@@ -896,13 +902,13 @@ def test_float_with_no_leading_zero_and_zero_fraction_allowed_false() -> None:
 
 def test_array_with_only_whitespace_and_commas_error() -> None:
     with pytest.raises(JSONDecodeError):
-        decode_with_my_impl('[   ,   ,   ]')
+        decode_with_my_impl("[   ,   ,   ]")
 
 
 def test_long_string_with_embedded_surrogates_and_literals() -> None:
     # A long string mixing literal Unicode characters and surrogate-escaped sequences
     literal_unicode = "漢字テスト" * 100
-    s = '{"long": "' + literal_unicode + r'\u4E00\u4E8C\u4E09' + '"}'
+    s = '{"long": "' + literal_unicode + r"\u4E00\u4E8C\u4E09" + '"}'
     expected = json.loads(s)
     result = decode_with_my_impl(s)
     assert result == expected
@@ -911,6 +917,6 @@ def test_long_string_with_embedded_surrogates_and_literals() -> None:
 
 def test_object_key_with_control_characters_error() -> None:
     # Keys cannot contain unescaped control characters (like a literal newline)
-    s = "{\n\"bad\nkey\": 1}"
+    s = '{\n"bad\nkey": 1}'
     with pytest.raises(JSONDecodeError):
         decode_with_my_impl(s)

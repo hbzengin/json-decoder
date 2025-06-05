@@ -9,7 +9,7 @@ def decode(content: str) -> Any | None:
 
 # Error thrown when decoding fails
 class JSONDecodeError(Exception):
-    """Raised when JSON parsing fails."""
+    """Raised when JSON parsing fails due to invalid JSON"""
 
 
 class JSONDecoder:
