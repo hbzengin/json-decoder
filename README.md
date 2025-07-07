@@ -14,7 +14,7 @@ result = decode('{"key": "value"}')
 Or directly using the `JSONDecoder` class:
 
 ```python
-from json_decoder.decoder import JSONDecoder
+from json_decoder import JSONDecoder
 decoder = JSONDecoder('{"key": "value"}')
 result = decoder.decode()
 ```
