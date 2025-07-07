@@ -19,4 +19,4 @@ decoder = JSONDecoder('{"key": "value"}')
 result = decoder.decode()
 ```
 
-The `tests/` directory includes several tests for correctness, including checks for edge cases. If you make modifications to the source code, you can run `pytest` to verify that the implementation is still correct. Feel free to make contributions to the tests if you think you can come up with other edge cases.
+The `tests/` directory includes some tests for correctness, including checks for edge cases. If you make modifications to the code, you can run `pytest` to verify that your implementaton still passes my test cases. Feel free to make additions to the tests if you come up with other edge cases.
