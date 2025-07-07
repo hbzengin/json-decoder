@@ -4,14 +4,14 @@ This repository contains an implementation of a JSON decoder in Python. The`JSON
 
 ### Usage
 
-You can use the decoder in two ways:
+You can use the decoder in two ways. Either using the `decode(json_str: str)` function:
 
 ```python
 from json_decoder import decode
 result = decode('{"key": "value"}')
 ```
 
-Or directly using the `JSONDecoder` class:
+Or by initializing the `JSONDecoder` class and calling its `decode()` method:
 
 ```python
 from json_decoder import JSONDecoder
